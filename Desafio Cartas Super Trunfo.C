@@ -32,7 +32,7 @@ void cadastrarCidade() {
 
     printf("Digite o código da cidade (ex: A01): ");
     scanf("%3s", nova.codigo);// Limitar a leitura a 3 caracteres para evitar overflow
-    nova.codigo[3] = '\0'; // Garante terminação da string
+    nova.codigo[3] = '\0'; // Garante a terminação da string
 
     printf("Digite o nome da cidade: ");
     scanf(" %[^\n]", nova.nome);
@@ -75,24 +75,45 @@ int buscarCidadePorCodigo(char codigo[4]) {
     return -1; // Não encontrada
 }
 
-// Compara duas cidades com base em um atributo escolhido
+// Função para obter valor de atributo com base em código
+float obterAtributo(Cidade c, int atributo) {
+    switch (atributo) {
+        case 1: return (float)c.populacao;
+        case 2: return c.area;
+        case 3: return c.pib;
+        case 4: return (float)c.pontos_turisticos;
+        case 5: return c.area == 0 ? 0 : c.populacao / c.area;
+        default: return 0;
+    }
+}
+
+// Nome do atributo (para exibição)
+const char* nomeAtributo(int atributo) {
+    switch (atributo) {
+        case 1: return "População";
+        case 2: return "Área";
+        case 3: return "PIB";
+        case 4: return "Pontos Turísticos";
+        case 5: return "Densidade Demográfica";
+        default: return "Desconhecido";
+    }
+}
+
+// Função para comparar cartas com dois atributos
 void compararCartas() {
     if (total_cidades < 2) {
         printf("Cadastre ao menos duas cidades para comparar.\n");
         return;
     }
-
     // Entrada dos códigos das cartas
     char cod1[4], cod2[4];
     printf("Digite o código da primeira cidade: ");
     scanf("%3s", cod1);
     printf("Digite o código da segunda cidade: ");
     scanf("%3s", cod2);
-
     // Busca pelos índices
     int idx1 = buscarCidadePorCodigo(cod1);
     int idx2 = buscarCidadePorCodigo(cod2);
-
     // Verificação se as cidades foram encontradas
     if (idx1 == -1 || idx2 == -1) {
         printf("Erro: Uma ou ambas as cidades não foram encontradas.\n");
@@ -109,74 +130,46 @@ void compararCartas() {
     printf("3. PIB\n");
     printf("4. Pontos Turísticos\n");
     printf("5. Densidade Demográfica (menor vence)\n");
-    printf("Opção: ");
-    
-    int opcao;
-    scanf("%d", &opcao);
 
-    // Exibe os dados das duas cidades para o jogador visualizar
+    int atr1, atr2;
+    printf("Escolha o primeiro atributo (1-5): ");
+    scanf("%d", &atr1);
+    printf("Escolha o segundo atributo (1-5): ");
+    scanf("%d", &atr2);
+
+    float val1a = obterAtributo(c1, atr1);
+    float val1b = obterAtributo(c1, atr2);
+    float val2a = obterAtributo(c2, atr1);
+    float val2b = obterAtributo(c2, atr2);
+
+    // Exibição de cartas
     printf("\nCarta 1:\n");
     exibirCidade(c1);
     printf("Carta 2:\n");
     exibirCidade(c2);
 
-    // Lógica de comparação com if-else aninhado
-    printf("Resultado da comparação:\n");
+    // Resultado da comparação com lógica avançada
+    printf("\nResultado da comparação:\n");
 
-    if (opcao == 1) { // População
-        printf("População %s: %d\n", c1.nome, c1.populacao);
-        printf("População %s: %d\n", c2.nome, c2.populacao);
-        if (c1.populacao > c2.populacao)
-            printf("Vencedora: %s (maior população)\n", c1.nome);
-        else if (c2.populacao > c1.populacao)
-            printf("Vencedora: %s (maior população)\n", c2.nome);
-        else
-            printf("Empate!\n");
+    // Decisão por pontos acumulados
+    int pontos_c1 = 0;
+    int pontos_c2 = 0;
 
-    } else if (opcao == 2) { // Área
-        printf("Área %s: %.2f km²\n", c1.nome, c1.area);
-        printf("Área %s: %.2f km²\n", c2.nome, c2.area);
-        if (c1.area > c2.area)
-            printf("Vencedora: %s (maior área)\n", c1.nome);
-        else if (c2.area > c1.area)
-            printf("Vencedora: %s (maior área)\n", c2.nome);
-        else
-            printf("Empate!\n");
+    // Operadores ternários: maior é melhor, exceto densidade
+    pontos_c1 += (atr1 == 5) ? (val1a < val2a ? 1 : val2a < val1a ? 0 : 0) : (val1a > val2a ? 1 : val2a > val1a ? 0 : 0);
+    pontos_c2 += (atr1 == 5) ? (val2a < val1a ? 1 : val1a < val2a ? 0 : 0) : (val2a > val1a ? 1 : val1a > val2a ? 0 : 0);
 
-    } else if (opcao == 3) { // PIB
-        printf("PIB %s: %.2f milhões\n", c1.nome, c1.pib);
-        printf("PIB %s: %.2f milhões\n", c2.nome, c2.pib);
-        if (c1.pib > c2.pib)
-            printf("Vencedora: %s (maior PIB)\n", c1.nome);
-        else if (c2.pib > c1.pib)
-            printf("Vencedora: %s (maior PIB)\n", c2.nome);
-        else
-            printf("Empate!\n");
+    pontos_c1 += (atr2 == 5) ? (val1b < val2b ? 1 : val2b < val1b ? 0 : 0) : (val1b > val2b ? 1 : val2b > val1b ? 0 : 0);
+    pontos_c2 += (atr2 == 5) ? (val2b < val1b ? 1 : val1b < val2b ? 0 : 0) : (val2b > val1b ? 1 : val1b > val2b ? 0 : 0);
 
-    } else if (opcao == 4) { // Pontos turísticos
-        printf("Pontos turísticos %s: %d\n", c1.nome, c1.pontos_turisticos);
-        printf("Pontos turísticos %s: %d\n", c2.nome, c2.pontos_turisticos);
-        if (c1.pontos_turisticos > c2.pontos_turisticos)
-            printf("Vencedora: %s (mais pontos turísticos)\n", c1.nome);
-        else if (c2.pontos_turisticos > c1.pontos_turisticos)
-            printf("Vencedora: %s (mais pontos turísticos)\n", c2.nome);
-        else
-            printf("Empate!\n");
+    // Mensagem final com ternário
+    printf("%s venceu com %d pontos!\n", 
+        pontos_c1 > pontos_c2 ? c1.nome : 
+        pontos_c2 > pontos_c1 ? c2.nome : 
+        "Empate");
 
-    } else if (opcao == 5) { // Densidade demográfica (menor vence)
-        float dens1 = c1.populacao / c1.area;
-        float dens2 = c2.populacao / c2.area;
-        printf("Densidade %s: %.2f hab/km²\n", c1.nome, dens1);
-        printf("Densidade %s: %.2f hab/km²\n", c2.nome, dens2);
-        if (dens1 < dens2)
-            printf("Vencedora: %s (menor densidade)\n", c1.nome);
-        else if (dens2 < dens1)
-            printf("Vencedora: %s (menor densidade)\n", c2.nome);
-        else
-            printf("Empate!\n");
-
-    } else {
-        printf("Opção inválida!\n");
+    if (pontos_c1 == pontos_c2) {
+        printf("Parabéns! Ambas as cidades são impressionantes!\n");
     }
 }
 
@@ -186,13 +179,12 @@ int main() {
 
     do {
         // Menu principal
-        printf("\n===== Super Trunfo - Cidades =====\n");
+        printf("\n===== Super Trunfo - Cidades (Nível Mestre) =====\n");
         printf("1. Cadastrar Cidade\n");
         printf("2. Comparar Cartas\n");
         printf("3. Sair\n");
         printf("Escolha uma opção: ");
         scanf("%d", &opcao);
-
         // Execução da funcionalidade com base na opção
         switch (opcao) {
             case 1:
@@ -202,7 +194,7 @@ int main() {
                 compararCartas();
                 break;
             case 3:
-                printf("Saindo do sistema... Obrigado por jogar! \n");
+                printf("Saindo do sistema... Obrigado por jogar!\n");
                 break;
             default:
                 printf("Opção inválida! Tente novamente.\n");
